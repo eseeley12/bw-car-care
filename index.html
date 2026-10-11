@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>BW Car Care &amp; Detailing | The Clean Life — PPF, Vinyl Wrap &amp; Ceramic, Ballina</title>
+<meta name="description" content="BW Car Care & Detailing — high-end PPF, colour-change vinyl wrap, ceramic coatings and paint correction in Ballina, NSW. 5.0 stars, 100+ Google reviews.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Permanent+Marker&family=Oswald:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  :root{
+    --black:#0a0908;
+    --black-2:#141110;
+    --black-3:#1c1816;
+    --red:#eb1e3f;
+    --red-dark:#9c1226;
+    --magenta:#ff3d94;
+    --gold:#ffce1c;
+    --gold-dark:#e0a800;
+    --cyan:#29e0ff;
+    --ivory:#f6f0e2;
+    --muted:#a89f8f;
+    --line: rgba(246,240,226,0.12);
+    --glass: rgba(18,15,14,0.6);
+    --ink:#0a0908;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--black);
+    color:var(--ivory);
+    font-family:'Inter',sans-serif;
+    font-weight:300;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{
+    font-family:'Oswald',sans-serif;
+    text-transform:uppercase;
+    letter-spacing:0.02em;
+    font-weight:600;
+    line-height:1.08;
+  }
+  .spray{ font-family:'Bungee', 'Oswald', sans-serif; text-transform:uppercase; letter-spacing:0.01em; }
+  .marker{ font-family:'Permanent Marker', cursive; text-transform:none; letter-spacing:0.01em; font-weight:400; }
+  a{color:inherit; text-decoration:none;}
+  img{display:block; max-width:100%;}
+  .eyebrow{
+    font-family:'Oswald',sans-serif;
+    font-size:0.72rem;
+    letter-spacing:0.32em;
+    text-transform:uppercase;
+    color:var(--gold);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:16px;
+    font-weight:500;
+  }
+  .eyebrow::before{
+    content:'';
+    width:26px; height:3px;
+    background:var(--red);
+    transform:skewX(-20deg);
+  }
+  .wrap{max-width:1180px; margin:0 auto; padding:0 28px;}
+  section{position:relative; overflow:hidden;}
+  ::selection{background:var(--red); color:#fff;}
+
+  /* halftone / texture layers */
+  .halftone{
+    position:absolute; inset:0; pointer-events:none; z-index:0;
+    background-image:radial-gradient(rgba(246,240,226,0.07) 1px, transparent 1.4px);
+    background-size:14px 14px;
+    opacity:0.5;
+    mask-image:linear-gradient(180deg, transparent, black 15%, black 85%, transparent);
+  }
+  .blob{ position:absolute; border-radius:50%; filter:blur(50px); pointer-events:none; z-index:0; }
+
+  /* ===== sticker / comic components ===== */
+  .sticker-tag{
+    display:inline-flex; align-items:center; gap:8px;
+    background:var(--gold);
+    color:var(--ink);
+    padding:10px 22px;
+    border:3px solid var(--ink);
+    border-radius:6px;
+    box-shadow:5px 5px 0 rgba(0,0,0,0.55);
+    transform:rotate(-3deg);
+    font-size:1.1rem;
+  }
+  .comic-border{
+    border:3px solid rgba(246,240,226,0.9);
+    box-shadow:6px 6px 0 rgba(0,0,0,0.5);
+  }
+
+  /* ===== Buttons ===== */
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:10px;
+    padding:16px 32px;
+    font-family:'Oswald',sans-serif;
+    font-size:0.82rem;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    font-weight:700;
+    border-radius:5px;
+    cursor:pointer;
+    border:2.5px solid var(--ink);
+    transition:transform .18s ease, box-shadow .18s ease;
+    white-space:nowrap;
+  }
+  .btn-primary{
+    background:var(--red);
+    color:#fff;
+    box-shadow:5px 5px 0 rgba(0,0,0,0.6);
+  }
+  .btn-primary:hover{ transform:translate(-2px,-2px); box-shadow:7px 7px 0 rgba(0,0,0,0.6); }
+  .btn-ghost{
+    background:transparent;
+    border-color: rgba(246,240,226,0.5);
+    color:var(--ivory);
+  }
+  .btn-ghost:hover{ border-color:var(--cyan); color:var(--cyan); transform:translate(-2px,-2px); }
+  .btn-gold{
+    background:var(--gold);
+    color:var(--ink);
+    box-shadow:5px 5px 0 rgba(0,0,0,0.6);
+  }
+  .btn-gold:hover{ transform:translate(-2px,-2px); box-shadow:7px 7px 0 rgba(0,0,0,0.6); }
+
+  /* ===== Nav ===== */
+  header{
+    position:fixed; top:0; left:0; right:0; z-index:1000;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 32px;
+    background:rgba(10,9,8,0.8);
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    border-bottom:3px solid var(--red);
+  }
+  .brand{ display:flex; align-items:center; gap:12px; }
+  .brand img{ height:46px; width:auto; filter:drop-shadow(0 2px 8px rgba(0,0,0,.5)); }
+  .brand-text{ line-height:1.05; }
+  .brand-text .name{
+    font-family:'Bungee',sans-serif; font-size:1rem;
+    letter-spacing:0.01em; color:var(--ivory);
+  }
+  .brand-text .sub{ font-size:0.6rem; letter-spacing:0.2em; color:var(--gold); text-transform:uppercase; font-family:'Oswald',sans-serif; }
+  nav.links{ display:flex; align-items:center; gap:32px; }
+  nav.links a{
+    font-family:'Oswald',sans-serif; font-size:0.78rem; letter-spacing:0.1em;
+    text-transform:uppercase; color:var(--muted); position:relative; padding:4px 0;
+    transition:color .2s ease;
+  }
+  nav.links a:hover{ color:var(--ivory); }
+  nav.links a::after{
+    content:''; position:absolute; left:0; bottom:-2px; height:3px; width:0;
+    background:var(--gold); transition:width .25s ease; transform:skewX(-15deg);
+  }
+  nav.links a:hover::after{ width:100%; }
+  .nav-cta{ display:flex; align-items:center; gap:16px; }
+  .phone-btn{
+    display:flex; align-items:center; gap:8px;
+    border:2px solid var(--gold);
+    color:var(--gold);
+    padding:9px 16px; border-radius:5px;
+    font-family:'Oswald',sans-serif; font-size:0.78rem; letter-spacing:0.08em; font-weight:600;
+  }
+  .phone-btn:hover{ background:rgba(255,206,28,0.1); }
+  .burger{ display:none; flex-direction:column; gap:5px; cursor:pointer; z-index:1200; }
+  .burger span{ width:26px; height:3px; background:var(--ivory); transition:.3s; }
+
+  /* ===== Hero ===== */
+  .hero{
+    min-height:100svh;
+    display:flex; align-items:flex-end;
+    position:relative;
+    padding:150px 0 70px;
+  }
+  .hero-bg{
+    position:absolute; inset:0; z-index:0;
+    background:url('./images/gwagon_square.jpg') center/cover no-repeat;
+  }
+  .hero-bg::after{
+    content:'';
+    position:absolute; inset:0;
+    background:
+      linear-gradient(180deg, rgba(10,9,8,0.6) 0%, rgba(10,9,8,0.4) 30%, rgba(10,9,8,0.95) 92%),
+      linear-gradient(90deg, rgba(10,9,8,0.88) 0%, rgba(10,9,8,0.2) 55%);
+  }
+  .hero-bg::before{
+    content:'';
+    position:absolute; inset:0; z-index:1; opacity:0.5; mix-blend-mode:overlay;
+    background-image:radial-gradient(rgba(255,255,255,0.5) 1px, transparent 1.4px);
+    background-size:5px 5px;
+  }
+  .hero-inner{ position:relative; z-index:2; width:100%; }
+
+  .clean-life-tag{
+    margin-bottom:22px;
+    animation:popIn .7s cubic-bezier(.2,1.4,.4,1) both;
+  }
+  .clean-life-tag .sticker-tag{
+    font-family:'Permanent Marker', cursive;
+    font-size:1.5rem;
+    padding:12px 28px;
+  }
+  @keyframes popIn{ from{opacity:0; transform:rotate(-3deg) scale(0.7);} to{opacity:1; transform:rotate(-3deg) scale(1);} }
+
+  .hero-badge{
+    display:inline-flex; align-items:center; gap:10px;
+    padding:8px 16px 8px 8px;
+    border:2px solid var(--gold);
+    background:rgba(20,17,16,0.6);
+    backdrop-filter:blur(6px);
+    border-radius:40px;
+    margin-bottom:22px;
+    animation:fadeUp .9s ease .1s both;
+  }
+  .hero-badge .badge-icon{
+    width:26px; height:26px; border-radius:50%;
+    background:#fff; display:flex; align-items:center; justify-content:center;
+    overflow:hidden; padding:2px;
+  }
+  .hero-badge .badge-icon img{ width:100%; height:100%; object-fit:contain; }
+  .hero-badge span.txt{ font-size:0.78rem; color:var(--ivory); letter-spacing:0.02em; }
+  .hero-badge b{ color:var(--gold); }
+
+  h1.hero-title{
+    font-family:'Bungee', sans-serif;
+    font-size:clamp(2.2rem, 5.4vw, 4.4rem);
+    color:var(--ivory);
+    max-width:900px;
+    margin-bottom:22px;
+    line-height:1.05;
+    animation:fadeUp 1s ease .15s both;
+  }
+  h1.hero-title em{
+    font-style:normal;
+    color:var(--black);
+    background:var(--red);
+    padding:0 12px;
+    display:inline-block;
+    transform:rotate(-1.5deg);
+    box-shadow:4px 4px 0 rgba(0,0,0,0.6);
+  }
+  .hero-sub{
+    font-size:1.05rem; color:var(--muted); max-width:540px; margin-bottom:34px;
+    font-weight:300; line-height:1.6;
+    animation:fadeUp 1s ease .25s both;
+  }
+  .hero-ctas{ display:flex; gap:16px; flex-wrap:wrap; margin-bottom:50px; animation:fadeUp 1s ease .35s both; }
+
+  .hero-form{
+    max-width:1180px;
+    background:var(--glass);
+    border:2px solid rgba(246,240,226,0.18);
+    border-top:3px solid var(--gold);
+    backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);
+    border-radius:8px;
+    padding:28px 30px;
+    animation:fadeUp 1s ease .45s both;
+  }
+  .hero-form .form-title{
+    font-family:'Oswald',sans-serif; font-size:0.95rem; letter-spacing:0.08em;
+    text-transform:uppercase; color:var(--ivory); margin-bottom:18px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .hero-form .form-title::before{ content:''; width:5px; height:16px; background:var(--red); display:inline-block; transform:skewX(-15deg);}
+  .form-grid{ display:grid; grid-template-columns:1fr 1fr 1fr 1fr auto; gap:14px; }
+  .form-grid input, .form-grid select, .form-grid textarea{
+    width:100%; background:rgba(246,240,226,0.06);
+    border:1.5px solid rgba(246,240,226,0.2);
+    color:var(--ivory); padding:14px 14px; border-radius:5px;
+    font-family:'Inter',sans-serif; font-size:0.88rem; font-weight:300;
+  }
+  .form-grid input::placeholder{ color:var(--muted); }
+  .form-grid input:focus, .form-grid select:focus{ outline:none; border-color:var(--gold); }
+  .form-grid button{ border:2.5px solid var(--ink); cursor:pointer; }
+
+  @keyframes fadeUp{ from{ opacity:0; transform:translateY(24px);} to{ opacity:1; transform:translateY(0);} }
+
+  /* ===== Reviews banner ===== */
+  .reviews-banner{
+    background:var(--black-2);
+    border-top:3px solid var(--red);
+    border-bottom:3px solid var(--red);
+    padding:26px 0;
+  }
+  .reviews-banner .wrap{
+    display:flex; align-items:center; justify-content:center; gap:46px; flex-wrap:wrap;
+  }
+  .rb-item{ display:flex; align-items:center; gap:12px; }
+  .rb-score{ font-family:'Bungee',sans-serif; font-size:2rem; color:var(--gold); }
+  .rb-stars{ color:var(--gold); letter-spacing:2px; font-size:1rem; }
+  .rb-label{ font-size:0.78rem; color:var(--muted); letter-spacing:0.03em; }
+  .g-badge{ display:flex; align-items:center; gap:8px; }
+  .g-badge .gicon{
+    width:28px; height:28px; border-radius:50%; background:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Oswald',sans-serif; font-weight:700; font-size:0.85rem; color:#4285F4;
+  }
+
+  /* ===== Section shared ===== */
+  .section{ padding:120px 0; }
+  .section-head{ max-width:640px; margin-bottom:64px; position:relative; z-index:2; }
+  .section-head h2{ font-family:'Bungee',sans-serif; font-size:clamp(1.8rem,3.6vw,2.7rem); color:var(--ivory); }
+  .section-head p{ color:var(--muted); margin-top:16px; font-size:1rem; line-height:1.7; max-width:560px; }
+
+  /* ===== About ===== */
+  .about{ background:var(--black-2); }
+  .about-grid{ display:grid; grid-template-columns:0.85fr 1.15fr; gap:70px; align-items:center; position:relative; z-index:2; }
+  .about-photo{ position:relative; }
+  .about-photo .frame{
+    position:relative; border-radius:6px; overflow:hidden;
+    border:3px solid rgba(246,240,226,0.9);
+    box-shadow:8px 8px 0 rgba(0,0,0,0.5);
+  }
+  .about-photo img{ width:100%; height:520px; object-fit:cover; filter:saturate(1.08) contrast(1.05); }
+  .about-photo .tag{
+    position:absolute; bottom:16px; left:16px;
+    background:var(--red);
+    color:#fff; font-family:'Oswald',sans-serif; font-size:0.72rem;
+    letter-spacing:0.14em; text-transform:uppercase;
+    padding:10px 18px; border:2px solid var(--ink);
+    transform:rotate(-2deg);
+  }
+  .about-photo .est{
+    position:absolute; top:20px; right:-10px;
+    background:var(--gold);
+    color:var(--ink); font-family:'Permanent Marker', cursive;
+    font-size:0.9rem; letter-spacing:0.02em; padding:9px 16px;
+    border:2px solid var(--ink); transform:rotate(4deg);
+    box-shadow:3px 3px 0 rgba(0,0,0,0.5);
+  }
+  .about-text h2{ font-family:'Bungee',sans-serif; font-size:clamp(1.7rem,3.2vw,2.4rem); margin-bottom:22px; }
+  .about-text p{ color:var(--muted); line-height:1.8; margin-bottom:18px; font-size:1rem; }
+  .feature-list{ list-style:none; margin-top:30px; display:grid; grid-template-columns:1fr 1fr; gap:18px 24px; }
+  .feature-list li{
+    display:flex; align-items:flex-start; gap:12px; font-size:0.92rem; color:var(--ivory); font-weight:400;
+  }
+  .feature-list li .ico{
+    width:22px; height:22px; flex:none; margin-top:1px;
+    border-radius:50%; background:var(--gold);
+    display:flex; align-items:center; justify-content:center;
+    color:var(--ink); font-size:0.68rem; font-weight:800; border:1.5px solid var(--ink);
+  }
+
+  /* ===== Services ===== */
+  .services-grid{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:24px; position:relative; z-index:2;
+  }
+  .service-card{
+    position:relative; height:340px; border-radius:8px; overflow:hidden;
+    border:3px solid rgba(246,240,226,0.85);
+    background-size:cover; background-position:center;
+    display:flex; flex-direction:column; justify-content:flex-end;
+    padding:26px; transition:transform .3s ease, box-shadow .3s ease;
+    box-shadow:6px 6px 0 rgba(0,0,0,0.5);
+  }
+  .service-card::before{
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(180deg, rgba(10,9,8,0.1) 8%, rgba(10,9,8,0.95) 92%);
+  }
+  .service-card:hover{ transform:translate(-3px,-6px); box-shadow:9px 11px 0 rgba(0,0,0,0.5); }
+  .service-card .num{
+    position:absolute; top:16px; left:16px; z-index:2;
+    font-family:'Bungee',sans-serif; color:var(--ink); background:var(--gold);
+    font-size:0.85rem; padding:6px 10px; border:2px solid var(--ink); transform:rotate(-4deg);
+  }
+  .service-card h3{ position:relative; z-index:2; font-size:1.25rem; color:var(--ivory); margin-bottom:8px; }
+  .service-card p{ position:relative; z-index:2; font-size:0.85rem; color:var(--muted); line-height:1.55; max-width:280px; }
+  .service-card .line{
+    position:relative; z-index:2;
+    width:36px; height:4px; background:var(--red); margin-bottom:14px;
+    transform:skewX(-20deg);
+    transition:width .3s ease;
+  }
+  .service-card:hover .line{ width:64px; }
+
+  /* ===== How it works ===== */
+  .steps{ display:grid; grid-template-columns:repeat(4,1fr); gap:0; position:relative; z-index:2; }
+  .step{ text-align:left; padding-right:20px; position:relative; }
+  .step .step-num{
+    width:54px; height:54px; border-radius:50%;
+    background:var(--red); border:3px solid var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Bungee',sans-serif; color:#fff; font-size:1.1rem;
+    margin-bottom:26px; position:relative; z-index:2;
+    box-shadow:4px 4px 0 rgba(0,0,0,0.5);
+  }
+  .step h4{ font-size:1.05rem; color:var(--ivory); margin-bottom:10px; }
+  .step p{ font-size:0.88rem; color:var(--muted); line-height:1.6; }
+
+  /* ===== Vinyl wrap slider ===== */
+  .wrap-section{ background:var(--black-2); }
+  .wrap-headline{
+    font-family:'Permanent Marker', cursive;
+    font-size:clamp(1.4rem,3vw,2rem);
+    color:var(--gold);
+    transform:rotate(-1.5deg);
+    display:inline-block;
+    margin-bottom:6px;
+  }
+  .compare-wrap{
+    position:relative; max-width:520px; margin:0 auto;
+    border-radius:10px; overflow:hidden; border:3px solid rgba(246,240,226,0.9);
+    box-shadow:10px 10px 0 rgba(0,0,0,0.55);
+    z-index:2;
+    user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;
+  }
+  .compare{
+    position:relative; width:100%; aspect-ratio:3/4; overflow:hidden; user-select:none;
+  }
+  .compare img{
+    position:absolute; inset:0; width:100%; height:100%; object-fit:cover; pointer-events:none;
+  }
+  .compare .after-img{ z-index:1; }
+  .compare .before-img{ z-index:2; clip-path:inset(0 50% 0 0); }
+  .compare-handle{
+    position:absolute; top:0; bottom:0; left:50%; z-index:3;
+    width:3px; background:var(--gold); cursor:ew-resize;
+    transform:translateX(-1.5px);
+  }
+  .compare-handle .knob{
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:48px; height:48px; border-radius:50%;
+    background:var(--gold); border:3px solid var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 6px 20px rgba(0,0,0,0.5);
+    font-family:'Bungee',sans-serif; color:var(--ink); font-size:1rem;
+  }
+  .compare-tag{
+    position:absolute; top:16px; z-index:4;
+    font-family:'Oswald',sans-serif; font-size:0.7rem; letter-spacing:0.14em;
+    text-transform:uppercase; padding:7px 14px; border-radius:3px;
+    background:var(--red); color:#fff;
+    border:2px solid var(--ink);
+  }
+  .compare-tag.left{ left:16px; transform:rotate(-2deg); }
+  .compare-tag.right{ right:16px; transform:rotate(2deg); }
+  .wrap-caption{ text-align:center; margin-top:26px; color:var(--muted); font-size:0.9rem; position:relative; z-index:2; }
+  .wrap-caption b{ color:var(--gold); font-weight:600; }
+
+  /* ===== Gallery ===== */
+  .gallery-grid{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:20px; position:relative; z-index:2;
+  }
+  .gallery-item{
+    aspect-ratio:1/1; border-radius:6px; overflow:hidden; position:relative;
+    background:repeating-linear-gradient(135deg, var(--black-3) 0 14px, var(--black-2) 14px 28px);
+    border:3px dashed rgba(255,206,28,0.4);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+  }
+  .gallery-item svg{ width:34px; height:34px; opacity:0.4; color:var(--gold); }
+  .gallery-item span{ font-family:'Permanent Marker', cursive; font-size:0.8rem; letter-spacing:0.02em; color:var(--muted); }
+  .gallery-item.photo{ border-style:solid; padding:0; }
+  .gallery-item.photo img{
+    width:100%; height:100%; object-fit:cover; display:block;
+    transition:transform .5s ease;
+  }
+  .gallery-item.photo:hover img{ transform:scale(1.06); }
+
+  /* ===== Map / area ===== */
+  .area-grid{ display:grid; grid-template-columns:0.9fr 1.1fr; gap:50px; align-items:stretch; position:relative; z-index:2; }
+  #map{ width:100%; height:100%; min-height:420px; border-radius:8px; border:3px solid rgba(246,240,226,0.85); filter:saturate(0.3) brightness(0.9); }
+  .area-list{ list-style:none; }
+  .area-list li{
+    padding:16px 0; border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between;
+    font-family:'Oswald',sans-serif; font-size:0.95rem; letter-spacing:0.02em; color:var(--ivory);
+  }
+  .area-list li span.dist{ color:var(--muted); font-size:0.78rem; letter-spacing:0.05em; font-family:'Inter',sans-serif; }
+
+  /* ===== Contact ===== */
+  .contact{ background:var(--black-2); }
+  .contact-grid{ display:grid; grid-template-columns:0.9fr 1.1fr; gap:60px; position:relative; z-index:2; }
+  .info-card{
+    display:flex; gap:16px; padding:20px 0; border-bottom:1px solid var(--line);
+  }
+  .info-card .ico{
+    width:44px; height:44px; border-radius:50%; flex:none;
+    background:var(--gold); border:2px solid var(--ink);
+    display:flex; align-items:center; justify-content:center; color:var(--ink);
+  }
+  .info-card h4{ font-size:0.92rem; letter-spacing:0.04em; color:var(--ivory); margin-bottom:4px; }
+  .info-card p{ font-size:0.88rem; color:var(--muted); line-height:1.5; }
+  .contact-form{
+    background:var(--glass); border:2px solid rgba(246,240,226,0.18); border-top:3px solid var(--red);
+    border-radius:8px; padding:36px; box-shadow:8px 8px 0 rgba(0,0,0,0.45);
+  }
+  .contact-form h3{ font-family:'Bungee',sans-serif; font-size:1.2rem; color:var(--ivory); margin-bottom:6px; }
+  .contact-form .sub{ color:var(--muted); font-size:0.88rem; margin-bottom:26px; }
+  .cf-row{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+  .contact-form input, .contact-form select, .contact-form textarea{
+    width:100%; background:rgba(246,240,226,0.06);
+    border:1.5px solid rgba(246,240,226,0.2);
+    color:var(--ivory); padding:14px; border-radius:5px;
+    font-family:'Inter',sans-serif; font-size:0.9rem; font-weight:300; margin-bottom:16px;
+  }
+  .contact-form textarea{ min-height:110px; resize:vertical; }
+  .contact-form input::placeholder, .contact-form textarea::placeholder{ color:var(--muted); }
+  .contact-form input:focus, .contact-form select:focus, .contact-form textarea:focus{ outline:none; border-color:var(--gold); }
+  .contact-form button{ width:100%; border:2.5px solid var(--ink); cursor:pointer; padding:16px; }
+
+  /* ===== Footer ===== */
+  footer{ background:var(--black); border-top:3px solid var(--red); padding:60px 0 30px; }
+  .footer-grid{ display:grid; grid-template-columns:1.4fr 0.8fr 0.8fr 1fr; gap:40px; margin-bottom:50px; }
+  .footer-brand{ display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+  .footer-brand img{ height:42px; }
+  footer p.tag{ color:var(--muted); font-size:0.88rem; line-height:1.7; max-width:280px; }
+  footer h5{ font-family:'Oswald',sans-serif; font-size:0.78rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--gold); margin-bottom:18px; }
+  footer ul{ list-style:none; }
+  footer ul li{ margin-bottom:12px; }
+  footer ul li a{ color:var(--muted); font-size:0.9rem; }
+  footer ul li a:hover{ color:var(--ivory); }
+  .socials{ display:flex; gap:12px; }
+  .socials a{
+    width:38px; height:38px; border-radius:50%; border:2px solid var(--line);
+    display:flex; align-items:center; justify-content:center; color:var(--muted);
+  }
+  .socials a:hover{ border-color:var(--gold); color:var(--gold); }
+  .footer-bottom{
+    border-top:1px solid var(--line); padding-top:24px;
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;
+    font-size:0.78rem; color:var(--muted);
+  }
+
+  /* ===== Responsive ===== */
+  @media (max-width: 980px){
+    nav.links, .nav-cta .phone-btn{ display:none; }
+    .burger{ display:flex; }
+    .about-grid, .contact-grid, .area-grid{ grid-template-columns:1fr; }
+    .services-grid{ grid-template-columns:repeat(2,1fr); }
+    .gallery-grid{ grid-template-columns:repeat(2,1fr); }
+    .steps{ grid-template-columns:repeat(2,1fr); gap:40px 20px; }
+    .footer-grid{ grid-template-columns:1fr 1fr; }
+    .form-grid{ grid-template-columns:1fr 1fr; }
+    .form-grid button{ grid-column:span 2; padding:16px; }
+  }
+  @media (max-width: 620px){
+    .wrap{ padding:0 20px; }
+    .section{ padding:80px 0; }
+    header{ padding:14px 18px; }
+    .hero{ padding-top:120px; }
+    .services-grid, .gallery-grid{ grid-template-columns:1fr; }
+    .steps{ grid-template-columns:1fr; }
+    .footer-grid{ grid-template-columns:1fr; gap:34px; }
+    .form-grid{ grid-template-columns:1fr; }
+    .form-grid button{ grid-column:span 1; }
+    .feature-list{ grid-template-columns:1fr; }
+    .cf-row{ grid-template-columns:1fr; }
+    .rb-score{ font-size:1.5rem; }
+    .reviews-banner .wrap{ gap:24px; }
+    .about-photo img{ height:360px; }
+    .clean-life-tag .sticker-tag{ font-size:1.1rem; padding:9px 18px; }
+  }
+
+  /* Mobile nav drawer */
+  .mobile-drawer{
+    position:fixed; inset:0; background:rgba(10,9,8,0.98);
+    z-index:1100; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:28px;
+    transform:translateX(100%); transition:transform .35s ease;
+  }
+  .mobile-drawer.open{ transform:translateX(0); }
+  .mobile-drawer a{ font-family:'Oswald',sans-serif; font-size:1.3rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--ivory); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <img src="./images/logo.png" alt="BW Car Care & Detailing logo">
+    <div class="brand-text">
+      <div class="name">BW Car Care</div>
+      <div class="sub">&amp; Detailing</div>
+    </div>
+  </div>
+  <nav class="links">
+    <a href="#services">Services</a>
+    <a href="#about">About</a>
+    <a href="#wrap">Vinyl Wrap</a>
+    <a href="#gallery">Gallery</a>
+    <a href="#area">Service Area</a>
+    <a href="#contact">Contact</a>
+  </nav>
+  <div class="nav-cta">
+    <a href="tel:0448187574" class="phone-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      0448 187 574
+    </a>
+    <a href="#contact" class="btn btn-primary" style="padding:12px 22px;">Get a Quote</a>
+    <div class="burger" id="burger"><span></span><span></span><span></span></div>
+  </div>
+</header>
+
+<div class="mobile-drawer" id="drawer">
+  <a href="#services">Services</a>
+  <a href="#about">About</a>
+  <a href="#wrap">Vinyl Wrap</a>
+  <a href="#gallery">Gallery</a>
+  <a href="#area">Service Area</a>
+  <a href="#contact">Contact</a>
+  <a href="tel:0448187574" class="btn btn-gold" style="margin-top:10px;">Call 0448 187 574</a>
+</div>
+
+<!-- ===== HERO ===== -->
+<section class="hero" id="home">
+  <div class="hero-bg"></div>
+  <div class="wrap hero-inner">
+
+    <div class="clean-life-tag">
+      <span class="sticker-tag">The Clean Life.</span>
+    </div>
+
+    <div class="hero-badge">
+      <div class="badge-icon"><img src="./images/logo.png" alt="BW Car Care logo"></div>
+      <span class="txt"><b>5.0★</b> &nbsp;100+ Google Reviews · Ballina, NSW</span>
+    </div>
+    <h1 class="hero-title">High-end <em>wraps</em>,<br>ceramic coatings &amp; paint correction.</h1>
+    <p class="hero-sub">Colour-change vinyl wrap, PPF, ceramic coatings and full paint correction — finished to a standard built for the cars people stop and stare at.</p>
+    <div class="hero-ctas">
+      <a href="#contact" class="btn btn-primary">Get a Free Quote</a>
+      <a href="tel:0448187574" class="btn btn-ghost">Call 0448 187 574</a>
+    </div>
+
+    <form class="hero-form" action="https://formspree.io/f/mppwjgzr" method="POST">
+      <div class="form-title">Request a Quote</div>
+      <div class="form-grid">
+        <input type="text" name="name" placeholder="Full name" required>
+        <input type="tel" name="phone" placeholder="Phone number" required>
+        <select name="service" required>
+          <option value="" disabled selected>Select service</option>
+          <option>Ceramic Coating</option>
+          <option>Paint Protection Film</option>
+          <option>Vinyl Colour Change</option>
+          <option>Paint Correction</option>
+          <option>Pre-Sale Detail</option>
+          <option>Interior Detail</option>
+          <option>Exterior Detail</option>
+        </select>
+        <input type="text" name="vehicle" placeholder="Make &amp; model">
+        <button type="submit" class="btn btn-gold">Send</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- ===== ABOUT ===== -->
+<section class="section about" id="about">
+  <div class="halftone"></div>
+  <div class="wrap about-grid">
+    <div class="about-photo">
+      <div class="frame">
+        <img src="./images/about_shop.jpg" alt="Inside the BW Car Care & Detailing studio in Ballina">
+        <div class="est">Est. 2022</div>
+        <div class="tag">Ballina, NSW</div>
+      </div>
+    </div>
+    <div class="about-text">
+      <div class="eyebrow">The Studio</div>
+      <h2>Luxury finishes, a professional high-end approach.</h2>
+      <p>BW Car Care &amp; Detailing was founded on a simple idea — every vehicle deserves the same care its owner would give it. Our new Ballina studio was built for one thing: high-end work. Full colour-change wraps, PPF, ceramic coatings and paint correction that hold up under close inspection.</p>
+      <p>Mobile to your door for the day-to-day, or booked into the studio for the big jobs — every panel gets the same meticulous, unhurried attention.</p>
+      <ul class="feature-list">
+        <li><span class="ico">✓</span> Mobile &amp; in-studio service</li>
+        <li><span class="ico">✓</span> Premium, long-lasting products</li>
+        <li><span class="ico">✓</span> Ceramic coatings &amp; PPF certified</li>
+        <li><span class="ico">✓</span> 5.0★ across 100+ reviews</li>
+        <li><span class="ico">✓</span> Full colour-change vinyl wraps</li>
+        <li><span class="ico">✓</span> Every vehicle treated like our own</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SERVICES ===== -->
+<section class="section" id="services">
+  <div class="halftone"></div>
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">What We Do</div>
+      <h2>Detailing &amp; protection, done properly.</h2>
+      <p>A complete range of high-end protection and presentation services — from a full interior refresh to a full colour-change wrap.</p>
+    </div>
+    <div class="services-grid">
+      <div class="service-card" style="background-image:url('./images/svc_ceramic.jpg');">
+        <div class="num">01</div>
+        <div class="line"></div>
+        <h3>Ceramic Coating</h3>
+        <p>Multi-year chemical-resistant protection with a deep, hydrophobic gloss finish.</p>
+      </div>
+      <div class="service-card" style="background-image:url('./images/hero_shop.jpg');">
+        <div class="num">02</div>
+        <div class="line"></div>
+        <h3>Paint Protection Film</h3>
+        <p>Self-healing PPF to shield high-impact panels from chips, scratches and grime.</p>
+      </div>
+      <div class="service-card" style="background-image:url('./images/svc_vinylwrap.jpg');">
+        <div class="num">03</div>
+        <div class="line"></div>
+        <h3>Vinyl Colour Change</h3>
+        <p>Full and partial colour-change wraps, finished with precision and zero panel gaps.</p>
+      </div>
+      <div class="service-card" style="background-image:url('./images/svc_paintcorrection.jpg');">
+        <div class="num">04</div>
+        <div class="line"></div>
+        <h3>Paint Correction</h3>
+        <p>Multi-stage machine polishing to remove swirls, scratches and oxidation.</p>
+      </div>
+      <div class="service-card" style="background-image:url('./images/svc_presale.jpg');">
+        <div class="num">05</div>
+        <div class="line"></div>
+        <h3>Pre-Sale Detail</h3>
+        <p>Maximise your sale price with a showroom-ready presentation, inside and out.</p>
+      </div>
+      <div class="service-card" style="background-image:url('./images/svc_interior.jpg');">
+        <div class="num">06</div>
+        <div class="line"></div>
+        <h3>Interior + Exterior Detail</h3>
+        <p>Deep steam clean, leather care and a mirror-finish hand wash and decontamination.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== HOW IT WORKS ===== -->
+<section class="section" style="background:var(--black-2); padding-top:100px; padding-bottom:100px;">
+  <div class="halftone"></div>
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">The Process</div>
+      <h2>How it works.</h2>
+      <p>Simple, transparent, and built around your schedule.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h4>Request a Quote</h4>
+        <p>Send through your vehicle details and the service you're after — online or by phone.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h4>Book a Time</h4>
+        <p>We'll lock in a time that suits, mobile to your location or in-studio.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h4>We Detail</h4>
+        <p>Meticulous prep, premium products, and full attention to every panel.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <h4>Drive Away Proud</h4>
+        <p>Collect a showroom finish and aftercare tips to keep it looking sharp.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== VINYL WRAP SLIDER ===== -->
+<section class="section wrap-section" id="wrap">
+  <div class="blob" style="width:340px; height:340px; background:var(--red); opacity:0.18; top:-80px; left:-100px;"></div>
+  <div class="blob" style="width:300px; height:300px; background:var(--gold); opacity:0.12; bottom:-60px; right:-80px;"></div>
+  <div class="wrap">
+    <div class="section-head" style="margin-left:auto; margin-right:auto; text-align:center;">
+      <div class="eyebrow" style="justify-content:center;">Vinyl Wrap</div>
+      <div class="wrap-headline">Drag it, don't just look at it.</div>
+      <h2>See the transformation.</h2>
+      <p style="margin-left:auto; margin-right:auto;">Factory grey to full matte black colour-change wrap on this Porsche Macan — precision work, zero panel gaps.</p>
+    </div>
+    <div class="compare-wrap">
+      <div class="compare" id="compareSlider">
+        <img src="./images/macan_factory_grey.jpg" alt="Porsche Macan before — factory grey paint" class="after-img">
+        <img src="./images/macan_wrapped_black.jpg" alt="Porsche Macan after — full matte black wrap" class="before-img" id="beforeImg">
+        <div class="compare-tag left">Wrapped</div>
+        <div class="compare-tag right">Factory</div>
+        <div class="compare-handle" id="compareHandle">
+          <div class="knob">⟷</div>
+        </div>
+      </div>
+    </div>
+    <p class="wrap-caption">Full <b>matte black colour-change wrap</b> on a Porsche Macan — clean edges, zero residue, showroom-finish results.</p>
+  </div>
+</section>
+
+<!-- ===== GALLERY ===== -->
+<section class="section" id="gallery">
+  <div class="halftone"></div>
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Recent Work</div>
+      <h2>Gallery.</h2>
+      <p>Fresh transformations added regularly — check back soon or follow along on Instagram.</p>
+    </div>
+    <div class="gallery-grid">
+      <div class="gallery-item photo"><img src="./images/gal_defender.jpg" alt="Land Rover Defender in the BW Car Care studio"></div>
+      <div class="gallery-item photo"><img src="./images/svc_ceramic.jpg" alt="Mercedes-AMG G-Wagon after ceramic coating"></div>
+      <div class="gallery-item photo"><img src="./images/gal_whitesedan.jpg" alt="Toyota sedan after detail, studio lighting"></div>
+      <div class="gallery-item photo"><img src="./images/gallery_2.jpg" alt="Holden Commodore ute after detail, BW Car Care studio"></div>
+      <div class="gallery-item photo"><img src="./images/gallery_1.jpg" alt="Detailed matte black vehicle under studio lighting"></div>
+      <div class="gallery-item photo"><img src="./images/gallery_4.jpg" alt="Toyota Hilux mid colour-change wrap"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SERVICE AREA ===== -->
+<section class="section" id="area" style="background:var(--black-2);">
+  <div class="halftone"></div>
+  <div class="wrap area-grid">
+    <div>
+      <div class="eyebrow">Where We Work</div>
+      <h2 style="font-family:'Bungee',sans-serif; font-size:clamp(1.7rem,3.2vw,2.4rem); margin-bottom:20px;">Servicing Ballina &amp; the Northern Rivers.</h2>
+      <p style="color:var(--muted); margin-bottom:30px; line-height:1.7;">Based at 31 Cessna Cres, Ballina — mobile to surrounding suburbs, or book in-studio.</p>
+      <ul class="area-list">
+        <li>Ballina <span class="dist">Studio</span></li>
+        <li>Lennox Head <span class="dist">~10 km</span></li>
+        <li>Bangalow <span class="dist">~19 km</span></li>
+        <li>Byron Bay <span class="dist">~28 km</span></li>
+        <li>Ocean Shores <span class="dist">~24 km</span></li>
+        <li>Alstonville <span class="dist">~14 km</span></li>
+      </ul>
+    </div>
+    <div id="map"></div>
+  </div>
+</section>
+
+<!-- ===== CONTACT ===== -->
+<section class="section contact" id="contact">
+  <div class="halftone"></div>
+  <div class="wrap contact-grid">
+    <div>
+      <div class="eyebrow">Get In Touch</div>
+      <h2 style="font-family:'Bungee',sans-serif; font-size:clamp(1.7rem,3.2vw,2.4rem); margin-bottom:30px;">Let's get your car sorted.</h2>
+
+      <div class="info-card">
+        <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
+        <div><h4>Phone</h4><p><a href="tel:0448187574">0448 187 574</a></p></div>
+      </div>
+      <div class="info-card">
+        <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+        <div><h4>Address</h4><p>31 Cessna Cres, Ballina NSW 2478</p></div>
+      </div>
+      <div class="info-card">
+        <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+        <div><h4>Hours</h4><p>Mon – Sat: 8:30am – 5:00pm<br>Sunday: Closed</p></div>
+      </div>
+      <div class="info-card" style="border-bottom:none;">
+        <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><path d="M17.5 6.5h.01"/></svg></div>
+        <div><h4>Instagram</h4><p><a href="https://www.instagram.com/bwcarcare/" target="_blank" rel="noopener">@bwcarcare</a></p></div>
+      </div>
+    </div>
+
+    <div class="contact-form">
+      <h3>Request a Quote</h3>
+      <p class="sub">Fill in your details and we'll get back to you shortly.</p>
+      <form action="https://formspree.io/f/mppwjgzr" method="POST">
+        <div class="cf-row">
+          <input type="text" name="name" placeholder="Full name" required>
+          <input type="tel" name="phone" placeholder="Phone number" required>
+        </div>
+        <div class="cf-row">
+          <input type="email" name="email" placeholder="Email address">
+          <select name="service" required>
+            <option value="" disabled selected>Select service</option>
+            <option>Ceramic Coating</option>
+            <option>Paint Protection Film</option>
+            <option>Vinyl Colour Change</option>
+            <option>Paint Correction</option>
+            <option>Pre-Sale Detail</option>
+            <option>Interior Detail</option>
+            <option>Exterior Detail</option>
+          </select>
+        </div>
+        <textarea name="message" placeholder="Tell us about your vehicle and what you're after..."></textarea>
+        <button type="submit" class="btn btn-primary">Send Request</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">
+          <img src="./images/logo.png" alt="BW Car Care logo">
+          <div class="brand-text"><div class="name">BW Car Care</div><div class="sub">&amp; Detailing</div></div>
+        </div>
+        <p class="tag">The Clean Life. Mobile &amp; in-studio detailing, ceramic coatings, PPF and colour-change vinyl wrap in Ballina, NSW — since 2022.</p>
+      </div>
+      <div>
+        <h5>Navigate</h5>
+        <ul>
+          <li><a href="#services">Services</a></li>
+          <li><a href="#about">About</a></li>
+          <li><a href="#wrap">Vinyl Wrap</a></li>
+          <li><a href="#gallery">Gallery</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>Services</h5>
+        <ul>
+          <li><a href="#services">Ceramic Coating</a></li>
+          <li><a href="#services">Paint Protection Film</a></li>
+          <li><a href="#services">Vinyl Colour Change</a></li>
+          <li><a href="#services">Interior &amp; Exterior Detail</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>Follow</h5>
+        <div class="socials">
+          <a href="https://www.instagram.com/bwcarcare/" target="_blank" rel="noopener" aria-label="Instagram">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><path d="M17.5 6.5h.01"/></svg>
+          </a>
+          <a href="tel:0448187574" aria-label="Phone">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 BW Car Care &amp; Detailing. All rights reserved.</span>
+      <span>Ballina, NSW · Built by EXS Digital</span>
+    </div>
+  </div>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  // Mobile nav
+  const burger = document.getElementById('burger');
+  const drawer = document.getElementById('drawer');
+  burger.addEventListener('click', () => drawer.classList.toggle('open'));
+  drawer.querySelectorAll('a').forEach(a => a.addEventListener('click', () => drawer.classList.remove('open')));
+
+  // Before/after compare slider
+  const slider = document.getElementById('compareSlider');
+  const handle = document.getElementById('compareHandle');
+  const beforeImg = document.getElementById('beforeImg');
+  let dragging = false;
+
+  function setPos(x){
+    const rect = slider.getBoundingClientRect();
+    let pct = ((x - rect.left) / rect.width) * 100;
+    pct = Math.max(0, Math.min(100, pct));
+    beforeImg.style.clipPath = `inset(0 ${100-pct}% 0 0)`;
+    handle.style.left = pct + '%';
+  }
+  handle.addEventListener('mousedown', e => { dragging = true; e.preventDefault(); });
+  window.addEventListener('mouseup', () => dragging = false);
+  window.addEventListener('mousemove', e => { if(dragging) setPos(e.clientX); });
+  slider.addEventListener('click', e => setPos(e.clientX));
+
+  handle.addEventListener('touchstart', () => dragging = true, {passive:true});
+  window.addEventListener('touchend', () => dragging = false);
+  window.addEventListener('touchmove', e => { if(dragging) setPos(e.touches[0].clientX); }, {passive:true});
+
+  // Map - Ballina, NSW
+  const map = L.map('map', { scrollWheelZoom:false }).setView([-28.8667, 153.5667], 12);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OpenStreetMap &copy; CARTO',
+    subdomains: 'abcd', maxZoom: 19
+  }).addTo(map);
+
+  const goldIcon = L.divIcon({
+    className: '',
+    html: '<div style="width:16px;height:16px;border-radius:50%;background:#ffce1c;border:2px solid #0a0908;box-shadow:0 0 12px rgba(255,206,28,0.8);"></div>',
+    iconSize:[16,16], iconAnchor:[8,8]
+  });
+  L.marker([-28.8667, 153.5667], { icon: goldIcon }).addTo(map)
+    .bindPopup('<b>BW Car Care & Detailing</b><br>31 Cessna Cres, Ballina');
+
+  const serviceAreas = [
+    {name:'Lennox Head', coords:[-28.7897, 153.5964]},
+    {name:'Bangalow', coords:[-28.6873, 153.5265]},
+    {name:'Byron Bay', coords:[-28.6474, 153.6020]},
+    {name:'Ocean Shores', coords:[-28.5230, 153.5390]},
+    {name:'Alstonville', coords:[-28.8333, 153.4333]},
+  ];
+  serviceAreas.forEach(a => {
+    L.circleMarker(a.coords, { radius:5, color:'#eb1e3f', fillColor:'#eb1e3f', fillOpacity:0.9 })
+      .addTo(map).bindPopup(a.name);
+  });
+</script>
+</body>
+</html>
